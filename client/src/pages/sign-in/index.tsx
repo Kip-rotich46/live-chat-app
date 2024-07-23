@@ -13,11 +13,9 @@ interface FormValues {
   name: string;
 }
 
-
-
-const SignIn =  () => {
+const SignIn = () => {
   const cookies = new Cookies();
-  const {setClient, setUser} = useUser();
+  const { setClient, setUser } = useUser();
   const navigate = useNavigate();
 
   const schema = yup.object().shape({
@@ -37,22 +35,23 @@ const SignIn =  () => {
   const onSubmit: SubmitHandler<FormValues> = async (data, event) => {
     event?.preventDefault();
 
-    const { username, name} = data;
+    const { username, name } = data;
 
-    const response = await fetch('http://localhost:3001/auth/createUser',{
-      method: 'POST',
+    const response = await fetch("http://localhost:3001/auth/createUser", {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         username,
         name,
-        image: PEOPLES_IMAGES[Math.floor(Math.random() * PEOPLES_IMAGES.length)]
-      })
-    })
+        image:
+          PEOPLES_IMAGES[Math.floor(Math.random() * PEOPLES_IMAGES.length)],
+      }),
+    });
 
-    if(!response.ok){
-      alert('An Error Occured!')
+    if (!response.ok) {
+      alert("An Error Occured!");
       return;
     }
 
@@ -67,20 +66,19 @@ const SignIn =  () => {
     const myClient = new StreamVideoClient({
       apiKey: "4ar926p6bgh5",
       user,
-      token: responseData.token
+      token: responseData.token,
     });
     setClient(myClient);
-    setUser({username, name});
+    setUser({ username, name });
 
     const expires = new Date();
     expires.setDate(expires.getDate() + 1);
-    cookies.set('token', responseData.token, { expires });
-    cookies.set('username', responseData.username, { expires });
-    cookies.set('name', responseData.name, { expires });
+    cookies.set("token", responseData.token, { expires });
+    cookies.set("username", responseData.username, { expires });
+    cookies.set("name", responseData.name, { expires });
 
-    navigate('/');
+    navigate("/");
   };
-
 
   return (
     <div className="sign-in home">
@@ -89,13 +87,14 @@ const SignIn =  () => {
         <div>
           <label>Username :</label>
           <input type="text" {...register("username")} />
-          {errors.username && <p style={{color:'red'}}>{errors.username.message}</p>}
+          {errors.username && (
+            <p style={{ color: "red" }}>{errors.username.message}</p>
+          )}
         </div>
         <div>
           <label>Name :</label>
           <input type="text" {...register("name")} />
-          {errors.name && <p style={{color:'red'}}>{errors.name.message}</p>}
-
+          {errors.name && <p style={{ color: "red" }}>{errors.name.message}</p>}
         </div>
         <button type="submit">Sign-In</button>
       </form>

@@ -1,5 +1,6 @@
-import { StreamVideoClient } from "@stream-io/video-react-sdk";
-import React, { createContext, useState, ReactNode, useContext } from "react";
+import { Call, StreamVideoClient, User as StreamUserType } from "@stream-io/video-react-sdk";
+import React, { createContext, useState, ReactNode, useContext, useEffect } from "react";
+import Cookies from "universal-cookie";
 
 export interface User {
   username: string;
@@ -11,6 +12,9 @@ interface UserContextProps {
   setUser: (user: User | null) => void;
   client: StreamVideoClient | undefined;
   setClient: (client: StreamVideoClient | undefined) => void;
+  call: Call | undefined;
+  setCall: (call: Call | undefined) => void;
+  isLoadingClient: boolean
 }
 
 const UserContext = createContext<UserContextProps | undefined>(undefined);
@@ -18,17 +22,6 @@ const UserContext = createContext<UserContextProps | undefined>(undefined);
 interface UserProviderProps {
   children: ReactNode;
 }
-
-export const UserProvider = (props: UserProviderProps) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [client, setClient] = useState<StreamVideoClient>();
-
-  return (
-    <UserContext.Provider value={{ user, setUser, client, setClient }}>
-      {props.children}
-    </UserContext.Provider>
-  );
-};
 
 export const useUser = () =>{
     const context = useContext(UserContext);
@@ -38,3 +31,49 @@ export const useUser = () =>{
     
     return context;
 }
+ 
+export const UserProvider = (props: UserProviderProps) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [client, setClient] = useState<StreamVideoClient>();
+  const [call, setCall] = useState<Call>();
+  const [isLoadingClient, setIsLoadingClient] = useState<boolean>(true)
+  const cookies = new Cookies();
+
+  useEffect(() =>{
+    const token = cookies.get('token');
+    const username = cookies.get('username');
+    const name = cookies.get('name');
+
+    if(!token || !username || !name){
+      setIsLoadingClient(false);
+       return
+      };
+
+    const user : StreamUserType ={
+      id: username,
+      name
+    }
+    const myClient = new StreamVideoClient ({
+      apiKey: "4ar926p6bgh5",
+      user,
+      token,
+    });
+
+    setClient(myClient);
+    setUser({username, name});
+    setIsLoadingClient(false);
+
+    return () =>{
+      myClient.disconnectUser();
+      setClient(undefined);
+      setUser(null)
+    }
+  },[])
+
+  return (
+    <UserContext.Provider value={{ user, setUser, client, setClient, call, setCall, isLoadingClient }}>
+      {props.children}
+    </UserContext.Provider>
+  );
+};
+
